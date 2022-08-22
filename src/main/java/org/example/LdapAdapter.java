@@ -208,13 +208,7 @@ public class LdapAdapter implements AutoCloseable {
      * Creates an object.
      */
     public void createObject(final DefaultEntry entry) throws DirectoryException {
-        createObject(new Create() {
-            @Override
-            public void createUsing(final LdapConnection connection) throws LdapException {
-                //
-                connection.add(entry);
-            }
-        });
+        createObject(connection -> connection.add(entry));
     }
 
     /**
@@ -254,13 +248,7 @@ public class LdapAdapter implements AutoCloseable {
      * Alters an object.
      */
     public void alterObject(final ModifyRequest request) throws DirectoryException {
-        alterObject(new Alter() {
-            @Override
-            public ModifyResponse alterUsing(final LdapConnection connection) throws LdapException {
-                //
-                return connection.modify(request);
-            }
-        });
+        alterObject(connection -> connection.modify(request));
     }
 
 
@@ -282,17 +270,12 @@ public class LdapAdapter implements AutoCloseable {
         LdapConnection connection = null;
         try {
             connection = pool.getConnection();
-            SearchCursor cursor = null;
-            try {
-                cursor = call.queryUsing(connection);
+            try (SearchCursor cursor = call.queryUsing(connection)) {
                 if (cursor.next()) {
                     if (cursor.isEntry())
                         return ((SearchResultEntry) cursor.get()).getEntry();
                 }
                 return null; // None found
-            }
-            finally {
-                if (null != cursor) cursor.close();
             }
         }
         catch (Throwable t) {
@@ -350,26 +333,14 @@ public class LdapAdapter implements AutoCloseable {
      * Finds (first) entry matching search request.
      */
     public Entry findObject(final SearchRequest request) throws DirectoryException {
-        return findObject(new Query() {
-            @Override
-            public SearchCursor queryUsing(final LdapConnection connection) throws LdapException {
-                //
-                return connection.search(request);
-            }
-        });
+        return findObject(connection -> connection.search(request));
     }
 
     /**
      * Finds all entries matching search request.
      */
     public Collection<Entry> findObjects(final SearchRequest request) throws DirectoryException {
-        return findObjects(new Query() {
-            @Override
-            public SearchCursor queryUsing(final LdapConnection connection) throws LdapException {
-                //
-                return connection.search(request);
-            }
-        });
+        return findObjects(connection -> connection.search(request));
     }
 
 
