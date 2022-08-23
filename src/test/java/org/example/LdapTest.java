@@ -4,6 +4,8 @@ package org.example;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+import org.apache.directory.api.ldap.model.entry.Entry;
+import org.apache.directory.api.ldap.model.message.SearchRequest;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -57,7 +59,46 @@ public class LdapTest extends TestCase {
     }
 
 
-    public void testFindingUser() {
+    public void testFindingUserUsingAdapterDirectly() {
+        Map<String, String> adapterConfig = new HashMap<>();
+
+        // Where to locate directory service
+        adapterConfig.put(LdapAdapter.LDAP_HOST, "localhost");
+        adapterConfig.put(LdapAdapter.LDAP_PORT, "10389"); // See line 137 in LocalLdapServer.java
+
+        // How to bind to directory service in order to search for users, etc.
+        adapterConfig.put(LdapAdapter.LDAP_READER_DN, "uid=Searcher,dc=test");
+        adapterConfig.put(LdapAdapter.LDAP_READER_CREDENTIALS, "notsosecret"); // See line 97 in LocalLdapServer.java
+
+        try (LdapAdapter adapter = new LdapAdapter(adapterConfig)) {
+
+            String userId = "tester"; // See line 122 in LocalLdapServer.java
+
+            System.out.println("Looking for user with id = " + userId);
+            System.out.println("  by means of LdapAdapter::findObject()");
+
+            //------------------------------------------------------------------------
+            // Search expression:         (&(objectClass=inetOrgPerson)(uid=tester))
+            // Starting point in tree:    ou=Members,dc=test
+            //------------------------------------------------------------------------
+            final String filter = LdapAdapter.compose("(&(objectClass=%s)(%s=%s))", "inetOrgPerson", "uid", userId);
+            SearchRequest req = adapter.shallowSearchWithFilter("ou=Members,dc=test", filter, "uid");
+
+            Entry user = adapter.findObject(req);
+            if (null == user) {
+                fail("Could not locate user");
+            }
+
+            String userDn = user.getDn().toString();
+            System.out.println("Found " + userId + " to be " + userDn + " (a distinguished name)");
+        }
+        catch (ConfigurationException | DirectoryException e) {
+            fail(e.getMessage());
+        }
+    }
+
+
+    public void testFindingUserUsingAdditionalEncapsulation() {
         Map<String, String> adapterConfig = new HashMap<>();
 
         // Where to locate directory service
