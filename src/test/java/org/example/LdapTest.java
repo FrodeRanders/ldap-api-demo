@@ -60,15 +60,15 @@ public class LdapTest extends TestCase {
 
 
     public void testFindingUserUsingAdapterDirectly() {
-        Map<String, String> adapterConfig = new HashMap<>();
-
-        // Where to locate directory service
-        adapterConfig.put(LdapAdapter.LDAP_HOST, "localhost");
-        adapterConfig.put(LdapAdapter.LDAP_PORT, "10389"); // See line 137 in LocalLdapServer.java
-
-        // How to bind to directory service in order to search for users, etc.
-        adapterConfig.put(LdapAdapter.LDAP_READER_DN, "uid=Searcher,dc=test");
-        adapterConfig.put(LdapAdapter.LDAP_READER_CREDENTIALS, "notsosecret"); // See line 97 in LocalLdapServer.java
+        Map<String, String> adapterConfig = Map.of(
+                // Where to locate directory service
+                LdapAdapter.LDAP_HOST, "localhost",
+                LdapAdapter.LDAP_PORT, "10389", // See line 137 in LocalLdapServer.java
+                //
+                // How to bind to directory service in order to search for users, etc.
+                LdapAdapter.LDAP_READER_DN, "uid=Searcher,dc=test",
+                LdapAdapter.LDAP_READER_CREDENTIALS, "notsosecret" // See line 97 in LocalLdapServer.java
+        );
 
         try (LdapAdapter adapter = new LdapAdapter(adapterConfig)) {
 
@@ -99,20 +99,20 @@ public class LdapTest extends TestCase {
 
 
     public void testFindingUserUsingAdditionalEncapsulation() {
-        Map<String, String> adapterConfig = new HashMap<>();
+        Map<String, String> adapterConfig = Map.of(
+                // Where to locate directory service
+                LdapAdapter.LDAP_HOST, "localhost",
+                LdapAdapter.LDAP_PORT, "10389", // See line 137 in LocalLdapServer.java
+                //
+                // How to bind to directory service in order to search for users, etc.
+                LdapAdapter.LDAP_READER_DN, "uid=Searcher,dc=test",
+                LdapAdapter.LDAP_READER_CREDENTIALS, "notsosecret" // See line 97 in LocalLdapServer.java
+        );
 
-        // Where to locate directory service
-        adapterConfig.put(LdapAdapter.LDAP_HOST, "localhost");
-        adapterConfig.put(LdapAdapter.LDAP_PORT, "10389"); // See line 137 in LocalLdapServer.java
-
-        // How to bind to directory service in order to search for users, etc.
-        adapterConfig.put(LdapAdapter.LDAP_READER_DN, "uid=Searcher,dc=test");
-        adapterConfig.put(LdapAdapter.LDAP_READER_CREDENTIALS, "notsosecret"); // See line 97 in LocalLdapServer.java
-
-        Map<String, String> templates = new HashMap<>();
 
         try (LdapAdapter adapter = new LdapAdapter(adapterConfig)) {
 
+            Map<String, String> templates = new HashMap<>();
             ApplicationDomain appDomain = new ApplicationDomain(templates, adapter);
 
             String userId = "tester"; // See line 122 in LocalLdapServer.java
@@ -122,7 +122,6 @@ public class LdapTest extends TestCase {
             System.out.println("    userObjectClass = " + appDomain.userObjectClass);
             System.out.println("    userIdAttribute = " + appDomain.userIdAttribute);
             System.out.println("    usersContext = " + appDomain.usersContext);
-
 
             String userDn = appDomain.findUserDn(userId);
             System.out.println("Found " + userId + " to be " + userDn + " (a distinguished name)");
